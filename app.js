@@ -1,6 +1,5 @@
 
 // configuration for a line chart with error bars
-
 var lineChartWithErrorBars = function (plot, variance, title){
   var chartConfig = {
     title: {
@@ -24,7 +23,7 @@ var lineChartWithErrorBars = function (plot, variance, title){
     series: [
       {
         type: 'line',
-        name: 'total solar irradiance',
+        name: title,
         marker: {
           enabled: true,
           radius: 3,
@@ -46,6 +45,7 @@ var dataSets = [
   'tcte_tsi_24hr.jsond?time,tsi_true_earth,measurement_uncertainty_true_earth',
   'nrl2_observational_composite_tsi_v02r01.jsond?time,tsi,tsi_uncertainty'
 ];
+
 // reusable attributes of data sets
 function getPrefix (dataSet) {
   return dataSet.substr(0, dataSet.indexOf('.'));
@@ -58,6 +58,7 @@ function getTitlePath (dataSet) {
   var titleData = parameters.split(',')[1];
   return titleData;
 }
+
 // get reusable attributes of data sets
 function getDataSetInfo (index) {
   return {
@@ -66,15 +67,18 @@ function getDataSetInfo (index) {
     titlePath: getTitlePath(dataSets[index]),
   };
 }
+
+// event listener to change data sets
 var counter = 0;
 document.getElementById('next').addEventListener('click', function(){
      counter = (counter + 1) % 2;
      var currentDataSet = getDataSetInfo(counter);
      getData(currentDataSet);
 });
+
 getData(getDataSetInfo(0));
 
-// get data at specified url
+// get data for specified data set
 function getData(dataSet) {
   axios.get(dataSet.url)
   .then(function (response) {
@@ -92,9 +96,11 @@ function getData(dataSet) {
       return [item[0], uncertainty_low, uncertainty_high];
     });
 
+    // use metadata from the data set to define the title, if available
     var title = response.data[dataSet.prefix].metadata[dataSet.titlePath].long_name ?
       response.data[dataSet.prefix].metadata[dataSet.titlePath].long_name : dataSet.titlePath.toUpperCase();
 
+    // make chart in the DOM
     var myChart = Highcharts.chart('container', lineChartWithErrorBars(dataArray, uncertaintyArray, title));
   })
   .catch(function (error) {
